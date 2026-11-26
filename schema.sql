@@ -34,6 +34,14 @@ alter publication supabase_realtime add table contador;
 insert into storage.buckets(id,name,public) values('galeria','galeria',true);
 create policy s_leer on storage.objects for select using(bucket_id='galeria');
 create policy s_admin on storage.objects for all using(bucket_id='galeria' and is_admin()) with check(bucket_id='galeria' and is_admin());
+-- Fotos sueltas en la raiz de GitHub (1 a 6)
+insert into galeria(pos,url,alt) values
+(1,'ft1.jpg','Momento Nexus 1'),
+(2,'ft2.jpg','Momento Nexus 2'),
+(3,'ft3.jpg','Momento Nexus 3'),
+(4,'ft4.jpg','Momento Nexus 4'),
+(5,'ft5.jpg','Momento Nexus 5'),
+(6,'ft6.jpg','Momento Nexus 6');
 -- Despues de crear tu usuario en Authentication > Users, hazlo administrador:
 -- insert into admins select id from auth.users where email='TU_CORREO';
 
