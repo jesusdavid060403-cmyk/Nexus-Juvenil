@@ -533,3 +533,24 @@ footer p{font-weight:700;color:rgba(255,255,255,.8)}
 }
 
 button:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid var(--r);outline-offset:2px}
+/* Forzar tamaño del logo en barra superior */
+#nav .brand,
+#nav a.brand {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  max-height: 36px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+#nav .brand img,
+#nav a.brand img,
+#nav img {
+  height: 32px !important;
+  max-height: 32px !important;
+  width: auto !important;
+  max-width: 110px !important;
+  object-fit: contain !important;
+  display: block !important;
+}
