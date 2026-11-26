@@ -169,8 +169,15 @@ $('#bq').onclick = async () => {
   });
 })();
 
-// Momentos / Fotos en movimiento continuo
-let G = [];
+// Momentos / Fotos en movimiento continuo (directo desde la raíz de GitHub)
+const G = [
+  { url: 'ft1.jpg', alt: 'Momento Nexus 1' },
+  { url: 'ft2.jpg', alt: 'Momento Nexus 2' },
+  { url: 'ft3.jpg', alt: 'Momento Nexus 3' },
+  { url: 'ft4.jpg', alt: 'Momento Nexus 4' },
+  { url: 'ft5.jpg', alt: 'Momento Nexus 5' },
+  { url: 'ft6.jpg', alt: 'Momento Nexus 6' }
+];
 let gi = 0;
 const mos = $('#mos');
 
@@ -180,32 +187,19 @@ function makeSlide(g, idx) {
   const im = new Image();
   im.src = g.url;
   im.alt = g.alt || `Momento Nexus ${idx + 1}`;
-  im.loading = 'lazy';
   slide.append(im);
   slide.onclick = () => openLb(idx);
   return slide;
 }
 
-(async () => {
-  if (sb) {
-    const { data } = await sb.from('galeria').select('*').order('pos');
-    G = (data || []).filter(x => x && x.url);
-  }
-  if (!G.length) {
-    mos.classList.add('static-mode');
-    const empty = document.createElement('div');
-    empty.className = 'gal-empty';
-    empty.textContent = 'Pronto subiremos los momentos en movimiento de Nexus aquí.';
-    mos.append(empty);
-    return;
-  }
+if (mos) {
   G.forEach((g, idx) => mos.append(makeSlide(g, idx)));
   if (G.length > 1) {
     G.forEach((g, idx) => mos.append(makeSlide(g, idx)));
   } else {
     mos.classList.add('static-mode');
   }
-})();
+}
 
 const openLb = idx => { gi = idx % G.length; $('#lb').hidden = false; showLb(); };
 const showLb = () => {
