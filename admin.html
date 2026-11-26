@@ -1,0 +1,38 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Admin Nexus</title><link rel="stylesheet" href="style.css">
+<style>h2{font-size:2.2rem;margin:0 0 1rem}section,footer{padding:0}body{padding:1.5rem}.c{border:1px solid var(--o);border-radius:14px;padding:1rem;margin:.8rem 0}input,textarea,select{background:#111;color:#fff;border:1px solid var(--o);border-radius:8px;padding:.5rem;width:100%;margin:.3rem 0}nav button{margin:.2rem}</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script></head><body>
+<h2>Panel Nexus</h2><div id="login"><input id="em" type="email" placeholder="Correo"><input id="pw" type="password" placeholder="Contraseña"><button class="btn" id="go">Entrar</button> <span id="err"></span></div>
+<div id="app" hidden><nav><button class="btn" data-v="pq">Preguntas</button><button class="btn" data-v="fr">Frases</button><button class="btn" data-v="ga">Galería</button><button class="btn" data-v="st">Estadísticas</button><button class="btn" id="out">Salir</button></nav><div id="v"></div></div>
+<script src="config.js"></script><script>
+const C=NEXUS_CFG,$=s=>document.querySelector(s),sb=supabase.createClient(C.url,C.key);
+const el=(h)=>{const d=document.createElement('div');d.className='c';d.innerHTML=h;return d};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function chk(){const{data:{user}}=await sb.auth.getUser();if(!user)return;
+ const{data}=await sb.from('admins').select('user_id').eq('user_id',user.id);
+ if(!data||!data.length){await sb.auth.signOut();$('#err').textContent='Este usuario no es administrador.';return}
+ $('#login').hidden=true;$('#app').hidden=false;view('pq')}
+$('#go').onclick=async()=>{const{error}=await sb.auth.signInWithPassword({email:$('#em').value,password:$('#pw').value});
+ error?$('#err').textContent='Credenciales incorrectas.':chk()};
+$('#out').onclick=async()=>{await sb.auth.signOut();location.reload()};
+document.querySelectorAll('nav [data-v]').forEach(b=>b.onclick=()=>view(b.dataset.v));chk();
+async function view(k){const v=$('#v');v.innerHTML='Cargando…';
+ if(k==='pq'){const{data}=await sb.from('preguntas').select('*').order('creada',{ascending:false});v.innerHTML='';
+  (data||[]).forEach(q=>{const d=el(`<p>${esc(q.texto)}</p><small>${q.estado}</small><textarea placeholder="Respuesta">${esc(q.respuesta)}</textarea>
+   <button class="btn" data-e="aprobada">Aprobar/Responder</button> <button class="btn" data-e="rechazada">Rechazar</button> <button class="btn" data-e="del">Borrar</button>`);
+   d.querySelectorAll('button').forEach(b=>b.onclick=async()=>{const e=b.dataset.e,r=d.querySelector('textarea').value||null;
+    e==='del'?await sb.from('preguntas').delete().eq('id',q.id):await sb.from('preguntas').update({estado:e,respuesta:r}).eq('id',q.id);view('pq')});v.append(d)})}
+ if(k==='fr'){const{data}=await sb.from('frases').select('*');v.innerHTML='';
+  const f=el(`<select id="ft"><option value="versiculo">Versículo</option><option value="reflexion">Reflexión</option><option value="promesa">Promesa</option></select><textarea id="fx" placeholder="Texto"></textarea><input id="fr" placeholder="Referencia (opcional)"><button class="btn">Agregar</button>`);
+  f.querySelector('button').onclick=async()=>{await sb.from('frases').insert({tipo:$('#ft').value,texto:$('#fx').value,ref:$('#fr').value});view('fr')};v.append(f);
+  (data||[]).forEach(x=>{const d=el(`<p>${esc(x.texto)} <small>${esc(x.ref)} · ${x.tipo}</small></p><button class="btn">Borrar</button>`);
+   d.querySelector('button').onclick=async()=>{await sb.from('frases').delete().eq('id',x.id);view('fr')};v.append(d)})}
+ if(k==='ga'){const{data}=await sb.from('galeria').select('*');v.innerHTML='';
+  for(let i=1;i<=6;i++){const g=(data||[]).find(x=>x.pos===i),d=el(`<b>Foto ${i}</b> ${g?`<img src="${esc(g.url)}" width="90">`:''}<input type="file" accept="image/*"><input placeholder="Texto alternativo" value="${esc(g?.alt)}"><span></span>`);
+   d.querySelector('input[type=file]').onchange=async e=>{const f=e.target.files[0];if(!f)return;const p=`slot-${i}-${Date.now()}.${f.name.split('.').pop()}`;
+    const u=await sb.storage.from('galeria').upload(p,f);if(u.error)return d.querySelector('span').textContent=' Error al subir.';
+    const url=sb.storage.from('galeria').getPublicUrl(p).data.publicUrl;
+    await sb.from('galeria').upsert({pos:i,url,alt:d.querySelectorAll('input')[1].value});view('ga')};v.append(d)}}
+ if(k==='st'){const a=await sb.from('contador').select('total').eq('id',1).single(),q=await sb.from('preguntas').select('estado');v.innerHTML='';
+  const n=s=>(q.data||[]).filter(x=>x.estado===s).length;v.append(el(`<h3>Participaciones: ${a.data?.total??0}</h3><p>Preguntas pendientes: ${n('pendiente')} · aprobadas: ${n('aprobada')} · rechazadas: ${n('rechazada')}</p>`))}}
+</script></body></html>
