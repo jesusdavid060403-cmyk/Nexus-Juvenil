@@ -183,7 +183,8 @@ if ($('#bq')) {
     .select('texto,respuesta')
     .eq('estado', 'aprobada')
     .order('creada', { ascending: false })
-    .limit(10);
+    .limit(300);
+  $('#resp').innerHTML = '';
   (data || []).forEach(q => {
     const d = document.createElement('div');
     const b = document.createElement('b');
