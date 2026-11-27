@@ -78,20 +78,22 @@ let F = window.NEXUS_FRASES || [];
 })();
 
 let last = -1;
-$('#bpal').onclick = () => {
-  if (!F.length) return;
-  let i;
-  do { i = Math.floor(Math.random() * F.length); } while (i === last && F.length > 1);
-  last = i;
-  const f = F[i];
-  const c = $('#card');
-  c.dataset.t = f.tipo || 'reflexion';
-  $('#ptxt').textContent = f.texto;
-  $('#pref').textContent = f.ref || '';
-  c.classList.remove('sw');
-  void c.offsetWidth;
-  c.classList.add('sw');
-};
+if ($('#bpal')) {
+  $('#bpal').onclick = () => {
+    if (!F.length) return;
+    let i;
+    do { i = Math.floor(Math.random() * F.length); } while (i === last && F.length > 1);
+    last = i;
+    const f = F[i];
+    const c = $('#card');
+    c.dataset.t = f.tipo || 'reflexion';
+    $('#ptxt').textContent = f.texto;
+    $('#pref').textContent = f.ref || '';
+    c.classList.remove('sw');
+    void c.offsetWidth;
+    c.classList.add('sw');
+  };
+}
 
 // Quiero ser parte de esto (Supabase como fuente de verdad)
 let shown = 0;
@@ -123,8 +125,7 @@ if (sb) {
   msg('#ccm', 'Conecta Supabase en config.js para activar el contador.');
 }
 
-$('#bcc').onclick = async () => {
- const KEY_YA_SUMO = 'nexus_ya_sumo_v1';
+const KEY_YA_SUMO = 'nexus_ya_sumo_v1';
 
 function marcarYaSumo() {
   const b = $('#bcc');
@@ -138,38 +139,45 @@ if (localStorage.getItem(KEY_YA_SUMO) === '1') {
   marcarYaSumo();
 }
 
-$('#bcc').onclick = async () => {
-  if (localStorage.getItem(KEY_YA_SUMO) === '1') return;
-  const b = $('#bcc');
-  if (!sb) return;
-  b.disabled = true;
+if ($('#bcc')) {
+  $('#bcc').onclick = async () => {
+    if (localStorage.getItem(KEY_YA_SUMO) === '1') return;
+    const b = $('#bcc');
+    if (!sb) {
+      msg('#ccm', 'Conecta Supabase en config.js para activar el contador.');
+      return;
+    }
+    b.disabled = true;
 
-  const { data, error } = await sb.rpc('cuenta_conmigo');
-  if (error) {
-    b.disabled = false;
-    msg('#ccm', 'No pudimos registrar tu paso ahora. Intenta de nuevo en unos segundos.');
-  } else {
-    localStorage.setItem(KEY_YA_SUMO, '1');
-    anim(+data);
-    marcarYaSumo();
-  }
-};
+    const { data, error } = await sb.rpc('cuenta_conmigo');
+    if (error) {
+      b.disabled = false;
+      msg('#ccm', 'No pudimos registrar tu paso ahora. Intenta de nuevo en unos segundos.');
+    } else {
+      localStorage.setItem(KEY_YA_SUMO, '1');
+      anim(+data);
+      marcarYaSumo();
+    }
+  };
+}
 
 // Hablemos limpio
 const qInput = $('#q');
-$('#bq').onclick = async () => {
-  const t = qInput.value.trim();
-  if (t.length < 5) return msg('#qm', 'Escribe al menos 5 caracteres.');
-  if (!sb) return msg('#qm', 'Conecta Supabase en config.js para enviar preguntas.');
-  $('#bq').disabled = true;
-  const { error } = await sb.from('preguntas').insert({ texto: t });
-  msg('#qm', error ? 'No se pudo enviar. Intenta de nuevo.' : 'Recibido');
-  if (!error) qInput.value = '';
-  setTimeout(() => { $('#bq').disabled = false; }, 4500);
-};
+if ($('#bq')) {
+  $('#bq').onclick = async () => {
+    const t = qInput.value.trim();
+    if (t.length < 5) return msg('#qm', 'Escribe al menos 5 caracteres.');
+    if (!sb) return msg('#qm', 'Conecta Supabase en config.js para enviar preguntas.');
+    $('#bq').disabled = true;
+    const { error } = await sb.from('preguntas').insert({ texto: t });
+    msg('#qm', error ? 'No se pudo enviar. Intenta de nuevo.' : 'Recibido');
+    if (!error) qInput.value = '';
+    setTimeout(() => { if ($('#bq')) $('#bq').disabled = false; }, 4500);
+  };
+}
 
 (async () => {
-  if (!sb) return;
+  if (!sb || !$('#resp')) return;
   const { data } = await sb
     .from('preguntas')
     .select('texto,respuesta')
@@ -219,32 +227,40 @@ if (mos) {
   }
 }
 
-const openLb = idx => { gi = idx % G.length; $('#lb').hidden = false; showLb(); };
+const openLb = idx => {
+  gi = idx % G.length;
+  if ($('#lb')) {
+    $('#lb').hidden = false;
+    showLb();
+  }
+};
 const showLb = () => {
   const g = G[gi];
-  if (!g) return;
+  if (!g || !$('#li')) return;
   $('#li').src = g.url;
   $('#li').alt = g.alt || '';
 };
 const navLb = d => { gi = (gi + d + G.length) % G.length; showLb(); };
 
-$('#lx').onclick = () => { $('#lb').hidden = true; };
-$('#lp').onclick = () => navLb(-1);
-$('#ln').onclick = () => navLb(1);
+if ($('#lx')) $('#lx').onclick = () => { $('#lb').hidden = true; };
+if ($('#lp')) $('#lp').onclick = () => navLb(-1);
+if ($('#ln')) $('#ln').onclick = () => navLb(1);
 
 addEventListener('keydown', e => {
-  if ($('#lb').hidden) return;
+  if (!$('#lb') || $('#lb').hidden) return;
   if (e.key === 'Escape') $('#lb').hidden = true;
   if (e.key === 'ArrowLeft') navLb(-1);
   if (e.key === 'ArrowRight') navLb(1);
 });
 
 let sx = 0;
-$('#lb').addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, { passive: true });
-$('#lb').addEventListener('touchend', e => {
-  const d = e.changedTouches[0].clientX - sx;
-  if (Math.abs(d) > 50) navLb(d > 0 ? -1 : 1);
-}, { passive: true });
+if ($('#lb')) {
+  $('#lb').addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, { passive: true });
+  $('#lb').addEventListener('touchend', e => {
+    const d = e.changedTouches[0].clientX - sx;
+    if (Math.abs(d) > 50) navLb(d > 0 ? -1 : 1);
+  }, { passive: true });
+}
 
 /* ===== MOVIMIENTO ===== */
 const RM = matchMedia('(prefers-reduced-motion:reduce)').matches;
