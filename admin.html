@@ -13,6 +13,7 @@
     .c{border:1px solid var(--o);border-radius:14px;padding:1rem;margin:.8rem 0}
     input,textarea,select{background:#111;color:#fff;border:1px solid var(--o);border-radius:8px;padding:.5rem;width:100%;margin:.3rem 0}
     nav button{margin:.2rem}
+    #err{display:block;margin-top:.6rem;color:#ff6b6b;font-weight:700}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 </head>
@@ -52,22 +53,43 @@
     async function chk() {
       const { data: { user } } = await sb.auth.getUser();
       if (!user) return;
-      const { data } = await sb.from('admins').select('user_id').eq('user_id', user.id);
-      if (!data || !data.length) {
+      const { data, error } = await sb.from('admins').select('user_id').eq('user_id', user.id);
+      if (error || !data || !data.length) {
         await sb.auth.signOut();
         $('#err').textContent = 'Este usuario no es administrador.';
         return;
       }
+      $('#err').textContent = '';
       $('#login').hidden = true;
       $('#app').hidden = false;
       view('pq');
     }
 
     $('#go').onclick = async () => {
+      const usuarioRaw = $('#em').value.trim();
+      const password = $('#pw').value;
       $('#err').textContent = '';
-      const email = normalizarUsuario($('#em').value);
-      const { error } = await sb.auth.signInWithPassword({ email, password: $('#pw').value });
-      error ? ($('#err').textContent = 'Credenciales incorrectas.') : chk();
+
+      if (!usuarioRaw && !password) {
+        $('#err').textContent = 'Ingresa tu usuario y contraseña.';
+        return;
+      }
+      if (!usuarioRaw) {
+        $('#err').textContent = 'El campo de usuario está vacío.';
+        return;
+      }
+      if (!password) {
+        $('#err').textContent = 'El campo de contraseña está vacío.';
+        return;
+      }
+
+      const email = normalizarUsuario(usuarioRaw);
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) {
+        $('#err').textContent = 'Usuario o contraseña incorrectos.';
+        return;
+      }
+      await chk();
     };
 
     $('#out').onclick = async () => {
