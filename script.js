@@ -124,17 +124,35 @@ if (sb) {
 }
 
 $('#bcc').onclick = async () => {
+ const KEY_YA_SUMO = 'nexus_ya_sumo_v1';
+
+function marcarYaSumo() {
+  const b = $('#bcc');
+  if (!b) return;
+  b.disabled = true;
+  b.textContent = 'Ya eres parte';
+  msg('#ccm', '¡Qué alegría que seas parte de esto!');
+}
+
+if (localStorage.getItem(KEY_YA_SUMO) === '1') {
+  marcarYaSumo();
+}
+
+$('#bcc').onclick = async () => {
+  if (localStorage.getItem(KEY_YA_SUMO) === '1') return;
   const b = $('#bcc');
   if (!sb) return;
   b.disabled = true;
+
   const { data, error } = await sb.rpc('cuenta_conmigo');
   if (error) {
+    b.disabled = false;
     msg('#ccm', 'No pudimos registrar tu paso ahora. Intenta de nuevo en unos segundos.');
   } else {
+    localStorage.setItem(KEY_YA_SUMO, '1');
     anim(+data);
-    msg('#ccm', '¡Qué alegría que seas parte de esto!');
+    marcarYaSumo();
   }
-  setTimeout(() => { b.disabled = false; }, 5000);
 };
 
 // Hablemos limpio
