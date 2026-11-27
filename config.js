@@ -1,6 +1,6 @@
 window.NEXUS_CFG = {
   url: "https://edzycieuayrjmrpofwnm.supabase.co",
   key: "sb_publishable_QtNqUsYbgSpVBgjFBJQgrQ_AcZ-Y6h-",
-  facebook: "",
-  instagram: ""
+  facebook: "https://www.facebook.com/somosredjuvenil1",
+  instagram: "https://www.instagram.com/somosnexusjuvenil/"
 };
